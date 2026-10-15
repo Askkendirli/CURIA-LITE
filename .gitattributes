@@ -1,6 +1,0 @@
-* text=auto eol=lf
-*.cmd text eol=crlf
-*.png binary
-*.docx binary
-*.zip binary
-audit/** -text
