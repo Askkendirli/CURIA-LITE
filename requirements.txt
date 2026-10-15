@@ -1,2 +1,0 @@
-# The application and declared dependencies are installed from pyproject.toml.
--e .
