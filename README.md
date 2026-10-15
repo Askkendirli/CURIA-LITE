@@ -1,7 +1,7 @@
 # CURIA-LITE
  CURIA LITE searches official sources and your local archive. Enter a date range and any case criteria, choose document languages, and search with keywords or a brief research context. Results are grouped by case and can be exported to Word, CSV or JSON.
 
- Please download and extract the provided .zip file to a suitable environment first. The README file is also available in it. I will be updating the provided .zip package of the tool as I come up with new iterations to the tool
+For quick start, Please download and extract the provided .zip file to a suitable environment first. The README file is also available in it. I will be updating the provided .zip package of the tool as I come up with new iterations to the tool
  
 ## Windows setup
 Install 64-bit **Python 3.12** and the Python launcher, then install and start **Ollama**. Python 3.11 and 3.13 are also supported by the setup scripts.
