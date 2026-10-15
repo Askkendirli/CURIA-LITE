@@ -3,209 +3,200 @@
 
 For quick start, Please download and extract the provided .zip file to a suitable environment first. A similar README file for setting up and using the tool is also available in it. I will be updating the provided .zip package (along with the rest of the files) of the tool as I come up with new iterations to the tool
  
-## Windows setup
-Install 64-bit **Python 3.12** and the Python launcher, then install and start **Ollama**. Python 3.11 and 3.13 are also supported by the setup scripts.
+## First installation
 
-Extract this repository into a short local folder, for example `C:\Tools\CURIA-Lite`. Double-click **`Setup_Windows.cmd`** to create the application environment and install its dependencies. Double-click **`Start_Windows.cmd`** to open the interface. Keep the console window open while working.
+Install **64-bit Python 3.11, 3.12 or 3.13** and **Ollama for Windows**. Extract the repository to a short local folder such as `C:\Tools\CURIA-Lite`, then double-click `Setup_Windows.cmd`.
 
-For contextual searches, install the default model in PowerShell:
+Download the initial local model in PowerShell:
 
 ```powershell
 ollama pull ministral-3:8b
 ```
 
-Keyword searches can be used before the model is installed. Internet access is needed for initial installation and collecting new sources. Once saved, the documents can be searched locally.
+Double-click `Start_Windows.cmd`. The interface opens at `http://127.0.0.1:8765`. Keep its console open during use. Another port can be selected with `Start_Windows.cmd --port 8766`.
 
-The default data folder is:
+The code uses a separate virtual environment and a persistent data folder. PowerShell activation is unnecessary. Setup does not change BIOS settings, GPU allocation or the existing full-tool archive.
+
+## A first search
+
+Choose the required **Document versions**, decision dates, courts and document types. Additional filters can be left blank. Select a keyword operator, enter words or a brief context, then choose **Find cases**. The source mode determines whether missing documents are retrieved or only the existing archive is searched.
+
+For a small real check, use the known judgment identifier `62024CJ0313`, French or English, and its decision date 12 February 2026. The identifier is a starting point for source access, not a bundled result. For a completely offline check, select **Load synthetic demo** and run the suggested literal search.
+
+## Keywords and operators
+
+The help menu explains each option when its item is hovered or reached with the keyboard. A preview below the input shows the actual interpreted expressions.
+
+| Operator | Example input | Matching condition |
+|---|---|---|
+| Exact phrase | `language version` | The complete phrase "language version", with words together in that order. |
+| Any word · OR | `language version` | "language" or "version", including documents containing both. |
+| All words · AND | `language version` | Both "language" and "version" anywhere in the same document. |
+| Any phrase | `language version; legal certainty` | The complete phrase "language version", the complete phrase "legal certainty", or both. |
+| All phrases | `language version; legal certainty` | Both complete phrases; they may appear in different paragraphs. |
+| Nearby words · NEAR | `language version` | The two terms within the selected number of intervening words in a paragraph, in either order. |
+
+Semicolons separate phrase entries. In word-based searches, double quotation marks keep an expression together: `"language version" customs` searches for that complete phrase and/or "customs", according to the selected operator.
+
+Exact matching ignores capitalisation and line wrapping and respects whole-word boundaries. The singular phrase "language version" does not match "language versions". For both forms choose **Any phrase** and enter:
 
 ```text
-%LOCALAPPDATA%\CURIA-Lite
+language version; language versions
 ```
 
-A different persistent local folder can be selected at startup:
+With **Any word · OR**, those same entries become the individual words "language", "version" and "versions". In English judgments, the footer "Language of the case" can therefore make a document a valid literal candidate. The contextual model then assesses whether the substantive research question is supported. No operator has been silently changed to suppress these candidates.
 
-```powershell
-.\.venv\Scripts\python.exe -m curia_lite --home "D:\Research\CURIA-Lite-Data" serve
+The **Exclude** field removes documents containing an excluded word or phrase. Full-text keyword checks cover the extracted source. A nonempty context adds a relevance assessment after these literal conditions. Clear the keywords when the context alone should select relevant documents.
+
+See `docs/KEYWORD_OPERATORS.md` for worked examples.
+
+## Contextual questions
+
+Every context is supplied in full to the local model. Each assessment checks the requested subject, action or relationship, responsible actor, outcome, negation and stated conditions. This applies to questions about sanctions, aid recovery, proportionality, annulment, language interpretation and other topics.
+
+Examples:
+
+```text
+Cases where the court refused recovery of aid
+Cases where applicants requested annulment of a decision
+Opinions proposing prospective application only
+Judgments comparing the English and French wording
 ```
 
-The same arguments can be passed to `Start_Windows.cmd`. Each installation creates its own virtual environment; keep the data folder separate from that environment.
+**Whose action should the evidence show?** defaults to Automatic. A specific actor can be selected when needed: the deciding court, a referring court, a party, the Advocate General, a public authority, the legislature, or a court in an earlier cited case. **Any relevant participant** suits broader subject-matter research.
 
-## Try a small search
+The model returns the requested actor, the actor supported by the evidence, and the strength of that support, together with its score, category, cited passages and short reason. The application checks explicit actor contradictions and score/support inconsistencies. A party requesting annulment can strongly support a question about requests; it does not establish that the court actually annulled the decision. The same distinction applies to other requested actions and outcomes.
 
-### Explore the interface
+For language-comparison questions, a specific comparison finding agreement is relevant even when no discrepancy exists. A general instruction to compare versions, an earlier-case quotation and a correction to one version from its context require different evidence. The dedicated language-comparison preset remains available as a convenient starting point.
 
-Choose **Load synthetic demo**, then **Find cases**. This loads four fictional examples and selects a French keyword search. Two French cases should appear. Open their supporting passages and try the Word export.
+These are prompt, evidence-selection and validation improvements. Model weights are unchanged. Actual model quality should be checked with the evidence and the built-in contextual test; no universal accuracy guarantee is implied.
 
-### Check phrase and word matching
+## Fast and complete-text screening
 
-Select **Test keyword matching** below the search controls, or double-click **`Test_Keywords_Windows.cmd`**. Ten checks cover the English phrase, English separate words, French negative examples, quoted expressions, exclusions and NEAR. The check uses a temporary archive and makes zero source-site or model calls. Its result is saved in `diagnostics/keyword-check.json`.
+**Fast** scans the extracted source locally and supplies selected passages to the model. Substantive passages matching the question are prioritised; the procedural-language footer no longer takes priority unless procedural language is the topic. The source and full-text keyword results remain unchanged.
 
-### Check document access
+**Complete text** processes all extracted blocks in bounded requests and takes longer. Neither mode hides unavailable source versions. Every supplied passage is saved in JSON and can be expanded in the interface, including the input for low-rated documents.
 
-In Settings, choose **Test a document download**. The check requests the selected language of C‑313/24 and displays the resulting source address or an error. It saves a detailed record under `diagnostics/source-check.json`.
+## When an assessment needs a second reading
 
-For a small real search, import `examples/known_cases.json` through **Use a CELEX selection JSON**. This contains a few official identifiers. The application retrieves their selected language versions before screening them.
+The default **Take a second look when the evidence and rating need clarification** setting schedules one additional request for a flagged Fast assessment. Examples include a Low rating beside a concrete grammatical comparison, or conflicting attribution across neighbouring passages. The second reading includes the relevant observation and nearby reasoning within the existing request budget. It may raise, lower or retain the initial grade.
 
-### Check the model
+The first answer and the review answer remain in JSON. The interface shows that an additional review occurred, and both requests are cached. A failed review leaves the first assessment available and records the outstanding issue. Changing this setting does not alter the installed model weights. The saved passages and review triggers can be inspected before interpreting a result as relevant.
 
-In Settings, first select **Check storage + model inventory**, then **Test one real model request**. After a successful test, use the comparison option or enter a brief context. Review the displayed evidence to judge whether the classifications suit the research question.
+## Relevance levels
 
-## Search controls
-
-### Case criteria
-
-Dates refer to decisions, Opinions or orders. Choose courts and document types, then add any identifiers, names or further metadata filters. Leaving a filter blank includes all values.
-
-Some advanced fields need supplementary information from an inspected source. Documents missing a required detail appear under **Needs metadata**. [Language and field support](docs/LANGUAGES_AND_FIELDS.md) explains which details are extracted automatically and how to provide the rest.
-
-### Document versions and query language
-
-Choose the language versions to collect and read in **Document versions**. The default model profile enables French, English, German, Spanish, Italian, Portuguese and Dutch. The **Query language** controls the language of the research context and brief model explanations.
-
-The **Language of the case** filter refers to procedural metadata and is set under Additional filters. For example, the French version of a judgment may concern a case conducted in Italian.
-
-The interface's core labels are available in English, French and German. More detailed technical messages remain in English.
-
-### Local sources and downloading
-
-**Local first + retrieve missing** checks the catalogue for the selected period, reuses validated files, and downloads missing language versions. **Check for new documents** refreshes the catalogue search. **Local archive only** searches the current local collection.
-
-Existing catalogue details are reused within the configured cache period. The date of that check and any retrieval problems are saved with the run. First-time collection over several years can take considerable time, especially with several language versions selected.
-
-### Keywords and context
-
-Select how the words should match from the operator menu. Hover over an option to read its explanation. The same help appears when an option receives keyboard focus, and a preview below the input shows how the entered text is interpreted.
-
-For the input `language version`:
-
-| Operator | A matching document contains |
+| Grade | Use |
 |---|---|
-| **Exact phrase** (default) | `language version`, together and in that order |
-| **Any word · OR** | `language`, `version`, or both |
-| **All words · AND** | Both `language` and `version` anywhere in the same document |
-| **All phrases** | Every complete expression entered, separated with `;` |
-| **Any phrase** | At least one complete expression entered, separated with `;` |
-| **Nearby words · NEAR** | Two words or quoted expressions within a chosen number of intervening words, in either order, in the same paragraph |
+| Very low · 1 | The supplied evidence does not establish the requested event or contradicts it. |
+| Low · 2 | Incidental mention or background, or evidence concerning a different required actor. |
+| Medium · 3 | Part of the requested relationship is supported; important conditions remain unclear. |
+| High · 4 | Direct evidence for the requested actor and relationship. |
+| Very high · 5 | Detailed direct evidence. |
 
-Choose **Exact phrase** to search for a complete expression. For example, `language version` matches that complete phrase and excludes `language … version` and `language versions`. To include the singular and plural, choose **Any phrase** and enter `language version; language versions`.
+Literal-only grades describe match strength. Contextual grades prioritise research reading. They are ordinal labels and should be checked against the passages. An incomplete model request remains unassessed. If a validation check adjusts a score, the original model answer and the reason for the adjustment remain in the record.
 
-In the word and NEAR modes, double quotes keep an expression together: `"language version" customs` with OR finds the quoted phrase or the word `customs`.
+Case groups preserve the component judgments, Opinions and language versions. A group's grade is its highest document grade. The display threshold controls what is shown; JSON retains all assessments. Selecting Very low + displays all graded candidates, including those that do not establish contextual relevance.
 
-**Exclude words or phrases** removes documents containing any listed expression. Separate exclusions with `;`, for example `customs; import duties`. This exclusion filter is applied before contextual screening too.
+## Understanding the counters
 
-Matching ignores capitalisation, repeated whitespace and line wrapping, while preserving accents and word boundaries. Exact phrases stay within a paragraph and retain punctuation. Keyword-only searches compare the supplied wording directly with the selected source text. Thus an English phrase absent from a French text yields no match. A word such as `version`, shared by French and English, can occur naturally in both; an English phrase explicitly quoted in French text also remains searchable.
+Each status count has its own explanation on mouse hover, keyboard focus or click. Press Escape to close the popup. The definitions are available in English, French and German, and the exported Word list contains a **Collection and screening guide**.
 
-Select the operator in the menu; enter the words or expressions in the text field. The search does not use inline Boolean formulas. [Keyword operators](docs/KEYWORD_OPERATORS.md) includes the full rules and examples.
-
-A context of up to **30 words**, or the comparison option, adds a short model assessment. When both are supplied, the keyword and exclusion conditions are applied first. For a broad conceptual question, leave the keyword field blank.
-
-### Finding comparisons of language versions
-
-Choose **Court compared language versions**. Judgments are the clearest starting point; orders can be added. Leave keywords blank for a broad search.
-
-The classifier looks for a comparison applied by the deciding court. General multilingual principles, party arguments, an Advocate General's own comparison and quotations of earlier judgments are recorded separately. A comparison that finds the versions agree can also be relevant.
-
-**Fast** reviews selected passages in a short request. **Complete text** sends every extracted block in bounded packets and takes longer. Both modes retain evidence locations for inspection.
-
-## Reading the results
-
-Five relevance levels help prioritise the reading:
-
-| Level | Contextual interpretation |
+| Counter | Meaning |
 |---|---|
-| Very low | No supporting passage identified in the supplied material |
-| Low | An incidental or background connection |
-| Medium | A plausible connection that needs closer review |
-| High | Clear, direct supporting evidence |
-| Very high | Detailed, explicit supporting evidence |
+| Already saved | Requested document-language versions reused from the checked local archive. |
+| Downloaded | Requested versions retrieved and accepted during this run. |
+| Needs attention | Retrieval or source validation remains incomplete. Open the associated error details to see the next step. |
+| Unlisted | The checked publication records list no full-text file that this tool can read for the requested language version. The available file languages and check time are shown under Publication details. That version was left out of the analysis. |
+| Still to check | Versions awaiting a download or a publication-availability check. |
+| Publication checks reused | Recent saved availability checks reused for this run. |
+| Additional reviews | Documents receiving the targeted second reading described above. |
 
-Keyword-only ratings describe phrase coverage and frequency. Contextual ratings reflect the model's reading of the supplied passages. Review those passages before relying on a classification.
+Collection counts refer to **document-language versions**. Several such versions can belong to one case. An unlisted version has no relevance grade because its requested text was not analysed; it remains part of the collection’s documented gaps. The shortlist contains assessed source texts.
 
-Each case group retains its document types, dates, languages and identifiers. Its headline rating is the highest document rating in the group. Open the individual documents to see any differences or pending assessments.
+New runs also produce **collection_status.csv**, a compact table of counts and definitions, and a `status_guide` inside `results.json`. Historical run exports remain unchanged. A new run is required to obtain the updated Word/CSV guide.
 
-Word and CSV use the search's saved rating threshold. JSON includes every assessment, download details and missing metadata. **Include lower ratings and pending assessments** shows more matched cases and pending reviews. Documents excluded by the keyword condition remain outside the shortlist and are counted in the search summary. Their details are preserved in JSON. Files and assessments that could not be completed remain available for retry.
+## Retrieval and language availability
 
-## Document sources
+**Discovery:** CELLAR metadata identifies documents by decision date and judicial publication type. **Content:** the configured provider is CELLAR by default, with EUR-Lex, CURIA and embedded-text PDF recovery options available in Settings. Provider and source addresses are retained with each file.
 
-The default source is the Publications Office's **CELLAR** service. Catalogue entries are grouped by CELEX identifier and decision date. Alternative CELLAR addresses are retained, and recognised older resource addresses are requested through HTTPS.
+The collector accepts the media type advertised for each official file, including PDF/A variants, and prefers HTML or XHTML before a PDF when both are available. The document reader handles joined-case headings, attached language prefixes and the General Court’s short preliminary-ruling heading. An inconclusive catalogue triggers the independent RDF publication-tree lookup; standard literal and collection nodes are supported. Nested resources and equivalent identifiers are followed locally. An advertised file is validated against the requested language, legal identity, type and available date information before indexing.
 
-For a discovered document, the downloader first checks the published language/format catalogue and tries the requested HTML or XHTML file directly. It can then try CELEX/work addresses with format negotiation, the documented language query, and EUR-Lex text pages. A known rectification note or reference to an Opinion in a judgment no longer changes its detected document type. **Try EUR-Lex when a CELLAR file is unavailable** is enabled by default and can be changed in Settings. The selected and resolved URLs are saved, so the origin of each document can be inspected.
+A complete English title or English case summary does not imply that an English full judgment is published. The Court's policy states that some judgments are available only in the language of the case and the drafting language, usually French. The application keeps a requested English gap visible and lists the languages with actual file links. It never relabels a French document as English or replaces a full judgment with a short notice.
 
-**EUR-Lex HTML** and **CURIA document pages** can also be selected as the preferred source. Source language, document identity and known dates are checked before a file enters the archive. Where a successful catalogue lookup lists other languages or formats but omits the requested version, that availability information is displayed separately. A bare 404, failed catalogue lookup or rejected source remains an error to investigate.
+A publication check is cacheable only when the source records support its stated scope; unsuccessful notices and failed advertised files remain visible as retrieval issues. Recent successful availability checks are reused for the configured period. **Retry this search** refreshes a run with unresolved versions or download failures.
 
-Optional browser assistance is installed with:
+To focus the next test on the outstanding documents, choose **Use a CELEX selection JSON** and load `examples/remaining_12_documents.json`. Keep the decision-date range 1 January 2025 to 1 January 2026 and choose the required document languages. These are the official identifiers from the submitted failure set. Their current availability still requires a fresh online check.
 
-```powershell
-py -3.12 scripts\bootstrap.py --browser
-```
+For wider case coverage, French can be selected as an additional document language. It is analysed directly and remains labelled French. An English-only literal phrase can still exclude French source text; use a suitable context or language-appropriate keywords.
 
-Enable it in Settings for pages that need interaction. A verification page can be completed manually when the provider permits it. A saved official HTML file can also be imported directly. See [Source access](docs/SOURCES.md) for the supported routes.
+Official source-language policy: https://curia.europa.eu/site/jcms/d2_5170/en/site-language-policy
+CELLAR metadata notices: https://op.europa.eu/en/web/cellar/cellar-data/metadata/metadata-notices
 
-## Model and performance settings
+## Model and performance controls
 
-The default model is `ministral-3:8b`. A different compatible local model, including `ministral-3:14b`, can be selected in Settings.
+Defaults are unchanged: `ministral-3:8b`, 8192 context tokens, 256 output tokens, up to 5600 evidence bytes and four Fast passages, one model worker, temperature 0 and 30-minute model retention. Settings can select another compatible local model and the languages it supports. Seven source languages are enabled initially: French, English, German, Spanish, Italian, Portuguese and Dutch.
 
-| Setting | Default |
-|---|---:|
-| Context | 8,192 tokens |
-| Output limit | 256 tokens |
-| Fast-mode source budget | 5,600 UTF-8 bytes, adjusted to fit the request |
-| Selected passages | Up to 4 |
-| Model workers | 1 |
-| Keep model loaded | 30 minutes |
-| Download workers | 2 |
-| Request spacing | 0.8 seconds |
-| Catalogue cache | 24 hours |
+Lite performs a narrower task on the same hardware. Literal-only searches make no model requests. A contextual candidate normally needs one small classification, and repeated identical questions reuse valid cached decisions. Changes to the source, query, model digest or prompt version invalidate the relevant assessment cache. No reports or translations are generated.
 
-The list-focused workflow reduces repeated generation, downloading and model loading. Actual speed depends on the collection size, model, backend and workstation. Start with one model worker and increase it only after observing stable operation.
+The loopback Ollama address is required. No model weights are downloaded automatically and no research context is sent to a cloud inference service. Source discovery and downloading still need internet access. The interface itself runs locally.
 
-The language list should match the model's capabilities. Source recognition currently covers the default seven languages and some additional headings. Settings checks that both the model-language declaration and document reader can support the chosen codes.
+## Built-in checks
 
-## Reuse documents from the full research tool
+**Test keyword matching** runs ten artificial cases through the archive and search pipeline, with no model or network requests. The result is saved to `diagnostics/keyword-check.json`. It can also be started with `Test_Keywords_Windows.cmd`.
 
-Import its original HTML files into the Lite archive:
+**Test contextual screening (12 examples)** makes twelve short English-language requests to the selected local model. The examples check judicial action versus party requests, broad-topic relevance, negation, AG reasoning, and agreement between language versions. This optional test uses artificial passages, leaves the judicial archive unchanged, and saves inputs, raw answers and expected ranges to `diagnostics/context-check.json`. It can also be started with `Test_Context_Windows.cmd`. A transport or invalid-response error stops the check promptly.
+
+**Settings → Test a document download** checks a single real source before a longer collection. Model inventory checks only availability; a small contextual run is needed to test loading and generation.
+
+## Existing documents and output
+
+Existing Lite installations reuse `%LOCALAPPDATA%\CURIA-Lite`. A custom home is selected before the command:
 
 ```powershell
-.\.venv\Scripts\python.exe -m curia_lite import "C:\Path\To\OldProject\archive\raw"
+.\.venv\Scripts\python.exe -m curia_lite --home D:\Research\CuriaData serve
 ```
 
-The importer reads UTF-8 HTML/XHTML and checks document language and identity. A `document.html.metadata.json` sidecar can supply verified supplementary information. Source conflicts are reported for review. Scanned documents require a separate text-extraction workflow before import.
+For sources from the full tool, import the raw HTML or embedded-text PDF files. The full tool's database and virtual environment are separate. Scanned/textless PDFs remain for manual follow-up. Imported metadata must be inspected and cannot override conflicting source identity.
 
-An exact case selection can be supplied through `examples/selection_with_metadata.json`. Keep the Lite database and environment separate from the full tool.
+Each run saves `request.json`, `results.json`, `shortlist.csv` and `shortlist.docx` under `runs/<run-id>/`. Source diagnostics are stored under `downloads/`; the latest checks are under `diagnostics/`. Files can contain research questions and source passages, so review them before public sharing.
 
-## Updating an existing installation
+## Troubleshooting
 
-Close the running console, extract this release into a new source folder, run **Setup_Windows.cmd**, and then **Start_Windows.cmd**. The version shown at the top should be **0.1.2**. The existing `%LOCALAPPDATA%\CURIA-Lite` workspace is reused; a custom workspace still uses the same `--home` argument.
+If setup fails, keep the visible error and confirm a supported 64-bit Python installation. If Ollama is unavailable, open it and check `ollama list`. A cloud-labelled model is rejected. If an HTTP page is blocked, the Settings browser option supports permitted interactive verification after installing the optional Playwright browser dependency. Access controls are not bypassed.
 
-Saved source bytes and model settings are retained. Previously parsed source text is refreshed locally when needed by the new document reader. Begin a new search and choose **Exact phrase** for the phrase test. Retried older searches retain their saved combinations, displayed as **All phrases** or **Any phrase**. The fresh search reuses already saved documents.
+A source 404, metadata error and unlisted publication version describe different conditions. The export and download trace distinguish them. Repeated blind requests to an unlisted English version do not improve coverage; the availability panel identifies actual file languages. Advertised files that cannot be read remain retryable issues.
 
-## Command-line use
+For a contextual result that looks wrong, inspect the cited and all supplied passages, actor choice, support field, original score and any adjustment. Include `results.json` and the contextual-check record when reporting it. These make the next diagnosis more specific.
+
+## GitHub publication
+
+Upload the repository folder containing this README. The archive includes source, tests, examples, documentation, Windows launchers and CI. It excludes the personal workspace, private result JSON, model weights and academic documents.
 
 ```powershell
-.\.venv\Scripts\python.exe -m curia_lite test-keywords
-.\.venv\Scripts\python.exe -m curia_lite doctor --sources --source-language en --out source-check.json
-.\.venv\Scripts\python.exe -m curia_lite doctor --models
-.\.venv\Scripts\python.exe -m curia_lite doctor --smoke --out model-check.json
-.\.venv\Scripts\python.exe -m curia_lite search examples\keyword_query.json
-.\.venv\Scripts\python.exe -m curia_lite search examples\comparison_query.json --selection examples\known_cases.json
+git init
+git add .
+git commit -m "Add CURIA LITE 0.1.5"
+git branch -M main
+git remote add origin https://github.com/ACCOUNT/curia-lite.git
+git push -u origin main
 ```
 
-Settings are stored in `settings.json` inside the data folder. The GUI covers common options; **Advanced settings** accepts other validated values. A command-line search returns a nonzero exit code when work is incomplete, making it easier to detect problems in scripts.
+Replace `ACCOUNT` with the actual account. A remote repository has not been created or pushed by this package. The included Windows/Ubuntu CI matrix runs after push; its presence is not a completed native platform test.
 
-## Development and GitHub
+Verify the downloaded snapshot with `python scripts/verify_integrity.py`. After intentional reviewed changes, regenerate it with `python scripts/verify_integrity.py --write`.
 
-The repository includes tests, source code, Windows launchers and CI jobs for Windows and Ubuntu with Python 3.11–3.13. Run from the source folder:
+## Validation and limits
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install ".[test]"
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe scripts\verify_integrity.py
-```
+See `audit/VERIFICATION.md` for executed tests and `audit/RUN_REVIEW.md` for the latest submitted result review. The development environment has no usable local model service or source-site DNS access. Live recovery and native Windows execution therefore remain target-machine checks. The supplied synthetic and replay tests must not be presented as new real-model accuracy measurements.
 
-Create an empty GitHub repository, then connect and push this directory. Keep the local archive, `.venv`, settings and research logs out of the repository; `.gitignore` excludes the usual generated files. After reviewed source changes, regenerate the release checksum manifest with `python scripts/verify_integrity.py --write`.
+MIT licence for the software. Official sources and model weights have their own terms. This is an independent research application.
 
-The [verification record](audit/VERIFICATION.md) describes the tests performed and the checks still needed on the target Windows machine. For troubleshooting, begin with the visible error and the saved download trace described in [Troubleshooting](docs/TROUBLESHOOTING.md).
+## Preparing a larger date-range run
 
-## Credits and licence
+Run the keyword check and the contextual check before expanding the period. Previously accepted source files are reused, and compatible assessments are cached. A changed reader re-extracts saved bytes locally; it does not force the same document to be downloaded again.
 
-Source-reading and archive helpers build on the author's French-first EU legal-linguistic research prototype. This software is distributed under MIT. Model weights and judicial documents retain their respective terms. CURIA LITE is an independent research application; official source links are provided for checking each result.
+Collection and model work are submitted through bounded queues. Source text is opened as a model worker becomes available, rather than loading every candidate text at once. The recent-search menu reads small run summaries, and publication details are paged. These changes limit pending work and interface load as the collection grows. They do not remove the time required to retrieve genuinely missing documents.
+
+The submitted yearly search contained 927 requested English versions: 700 accepted, 215 unlisted and 12 unresolved retrievals. Use `examples/remaining_12_documents.json` for a focused retrieval check before the next large collection. Successful availability checks can be reused for the configured period; Retry this search performs the documented fresh checks.
+
+The recorded development audit for this release is in `audit/VERIFICATION.md`; actual source and model checks on the target Windows machine remain necessary.
