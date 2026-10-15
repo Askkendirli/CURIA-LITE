@@ -26,9 +26,12 @@
   "request_interval": 0.8,
   "download_workers": 2,
   "provider": "cellar",
+  "eurlex_fallback": true,
+  "curia_fallback": true,
+  "pdf_fallback": true,
+  "publication_ttl_hours": 24,
   "browser_fallback": false,
   "browser_executable": "",
   "ui_language": "en",
-  "max_file_mb": 20,
-  "eurlex_fallback": true
+  "max_file_mb": 20
 }

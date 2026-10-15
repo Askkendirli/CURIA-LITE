@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "curia-lite"
-version = "0.1.2"
+version = "0.1.4"
 description = "Local list-only EU case-law finder with multilingual relevance screening"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 authors = [{name = "Ahmet Şadan Kutay Kendirli"}]
 license = "MIT"
-dependencies = ["requests>=2.32.3,<3", "beautifulsoup4>=4.12.3,<5", "python-docx>=1.1.2,<2"]
+dependencies = ["requests>=2.32.3,<3", "beautifulsoup4>=4.12.3,<5", "python-docx>=1.1.2,<2", "pypdf>=5,<7"]
 
 [project.optional-dependencies]
 browser = ["playwright>=1.50,<2"]

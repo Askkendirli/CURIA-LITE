@@ -1,3 +1,25 @@
+# 0.1.4 — 15 October 2026
+
+- Replaces the rejected unbounded catalogue query with a bounded direct-link query and runs the independent RDF-tree route even after SPARQL errors. Keeps response excerpts for troubleshooting.
+- Handles nested RDF resources, avoids duplicate catalogue requests, and checks CURIA case addresses including appeal variants. Available source files remain identity- and language-checked.
+- Applies the same actor/action/outcome/condition rubric to every contextual question, with an editable actor choice, structured support fields, examples for negation and party requests, and a new eight-example local-model check.
+- Retains original scores when evidence checks adjust an answer; clarifies that specific agreement between language versions supports comparison. Correcting one version from context alone is kept separate.
+- Prioritises substantive context passages over procedural-language footnotes without changing full-text keyword matching.
+- Rewrites operator help with quoted search examples and adds Example: placeholders. Existing matching semantics remain unchanged.
+- Adds an identifier selection for the 34 outstanding English documents from the submitted run, for focused local testing.
+
+# 0.1.3 — 15 October 2026
+
+- Reconcile metadata-only language entries with a separately requested official RDF publication tree; follow equivalent WEMI identifiers.
+- Cache scoped publication-file observations with an expiry and explicit refresh, while retaining unlisted requested texts in coverage details.
+- Add embedded-text PDF retrieval/import and optional CURIA fallback. Preserve raw PDF bytes and existing language/identity checks.
+- Retry interrupted HTTP body transfers within a bounded allowance.
+- Recognise explicit current-court comparison intent in a general context query and preview it in the interface.
+- Check cited passage attribution, preserving original model answers when a party/general-principle/referring-court finding requires a lower displayed grade.
+- Prioritise literal-match passages, retain every supplied model-input passage and restore keyword audit information on semantic results.
+- Clean incidental words from rapporteur names and recognise General Court party headings during local re-extraction.
+- Preserve keyword operators and runtime model settings; refresh prompt-version-dependent classification caches.
+
 # 0.1.2 — 15 October 2026
 
 - Added explicit Exact phrase, Any word / OR, All words / AND, All phrases, Any phrase and NEAR controls, plus exclusions.
